@@ -5,7 +5,6 @@ import {
   Users, 
   FileText, 
   DollarSign, 
-  AlertTriangle,
   AlertCircle,
   RefreshCw,
   ArrowRight,
@@ -150,20 +149,36 @@ export function DashboardPage() {
               <input
                 type="date"
                 value={filters.startDate || ''}
+                max={filters.endDate || undefined}
                 onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm"
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm ${
+                  filters.startDate && filters.endDate && filters.startDate > filters.endDate 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : ''
+                }`}
               />
+              {filters.startDate && filters.endDate && filters.startDate > filters.endDate && (
+                <p className="text-xs text-red-500 mt-1">Data inicial deve ser menor ou igual à data final</p>
+              )}
             </div>
             <div className="flex-1">
               <label className="text-sm text-muted-foreground mb-1 block">Data Final</label>
               <input
                 type="date"
                 value={filters.endDate || ''}
+                min={filters.startDate || undefined}
                 onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm"
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm ${
+                  filters.startDate && filters.endDate && filters.endDate < filters.startDate 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : ''
+                }`}
               />
+              {filters.startDate && filters.endDate && filters.endDate < filters.startDate && (
+                <p className="text-xs text-red-500 mt-1">Data final deve ser maior ou igual à data inicial</p>
+              )}
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -195,7 +210,7 @@ export function DashboardPage() {
             </div>
 
             {urgentCount > 0 && (
-              <Card className="mb-6 border-red-200 bg-red-50">
+              <Card className="mb-6 border-red-200 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors" onClick={() => navigate('/urgents')}>
                 <CardHeader className="py-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-medium flex items-center gap-2 text-red-700">
                     <AlertCircle className="w-4 h-4" />
@@ -205,7 +220,7 @@ export function DashboardPage() {
                     variant="ghost" 
                     size="sm" 
                     className="text-xs text-red-600"
-                    onClick={() => navigate('/urgents')}
+                    onClick={(e) => { e.stopPropagation(); navigate('/urgents'); }}
                   >
                     Ver todos <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
@@ -309,42 +324,7 @@ export function DashboardPage() {
                   </CardContent>
                 </Card>
               )}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border">
-                <CardHeader className="flex flex-row items-center justify-between pb-4">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-[#1e40af]" />
-                    Urgentes
-                  </CardTitle>
-                  <span className="text-xs text-muted-foreground">
-                    {dashboard?.budgetsExpiringToday || 0} vencendo hoje
-                  </span>
-                </CardHeader>
-                <CardContent>
-                  {dashboard?.budgetsExpiringToday && dashboard.budgetsExpiringToday > 0 ? (
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Você tem {dashboard.budgetsExpiringToday} orçamento(s) vencendo hoje!
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate('/budgets?expiring=true')}
-                      >
-                        Ver orçamentos <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nenhum orçamento vencendo hoje
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border">
+                <Card className="border">
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
                   <CardTitle className="text-base font-medium flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#1e40af]" />
@@ -366,7 +346,7 @@ export function DashboardPage() {
                         <div 
                           key={budget.id} 
                           className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => navigate(`/budgets?detail=${budget.id}`)}
+                          onClick={() => navigate(`/budget/${budget.id}`)}
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{budget.code}</p>
@@ -417,6 +397,8 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
+
+      
           </>
         )}
       </div>

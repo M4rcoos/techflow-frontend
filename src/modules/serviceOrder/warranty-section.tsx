@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useWarranty, useCreateWarranty } from '../../hooks/use-warranty';
 import { formatDate } from '../../lib/utils';
+import { getToken } from '../../lib/api';
 
 interface BudgetItem {
   id: string;
@@ -113,13 +114,34 @@ export function WarrantySection({ serviceOrder }: WarrantySectionProps) {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!warranty) return;
     
-    const baseUrl = window.location.origin;
-    const printUrl = `${baseUrl}/warranty/print/${serviceOrder.id}`;
-    
-    window.open(printUrl, '_blank');
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+      const token = getToken();
+      
+      const response = await fetch(`${apiUrl}/api/warranties/service-orders/${serviceOrder.id}/warranty/print`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar warranty');
+      }
+      
+      const html = await response.text();
+      
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    } catch (error) {
+      console.error('Erro ao imprimir warranty:', error);
+    }
   };
 
   if (isLoadingWarranty) {

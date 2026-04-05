@@ -20,7 +20,6 @@ import { TrackPage } from './modules/public/track-page';
 import { UsersPage } from './modules/user/users-page';
 import { SettingsPage } from './modules/settings/settings-page';
 import { Sidebar } from './components/sidebar';
-import { Navbar } from './components/navbar';
 import { MobileHeader } from './components/mobile-header';
 
 const queryClient = new QueryClient({
@@ -55,9 +54,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <Sidebar />
       <div className="lg:pl-64">
-        <Navbar />
         <MobileHeader />
-        <main className="p-4 lg:p-8">{children}</main>
+        <main className="pt-14 lg:pt-0 p-4 lg:p-8">{children}</main>
       </div>
     </div>
   );
@@ -76,7 +74,7 @@ function AppRoutes() {
       <Route path="/new-password" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <NewPasswordPage />} />
       
       <Route path="/track" element={<TrackPage />} />
-      <Route path="/public/:token" element={<TrackPage />} />
+      <Route path="/track/:token" element={<TrackPage />} />
       
       <Route path="/dashboard" element={
         <ProtectedRoute>

@@ -17,6 +17,7 @@ import { useRoleAccess } from '../../hooks/use-role-access';
 import { useCep } from '../../hooks/use-cep';
 import { X, Pencil, Loader2 } from 'lucide-react';
 import type { CreateClientData } from '../../types';
+import { formatCPF, formatCNPJ, validateCPF, validateCNPJ } from '../../lib/validators';
 
 interface ClientDetailModalProps {
   open: boolean;
@@ -44,11 +45,23 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
   const { deleteClient, isDeleting, updateClient } = useClients();
   const { canDelete, canEditClient } = useRoleAccess();
   const [isEditing, setIsEditing] = useState(false);
+  const [cpfError, setCpfError] = useState('');
+  const [cnpjError, setCnpjError] = useState('');
 
   const { searchCep, isLoading: isCepLoading } = useCep();
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>();
 
   useEffect(() => {
+    if (open) {
+      setIsEditing(false);
+      setCpfError('');
+      setCnpjError('');
+    }
+  }, [open]);
+
+  useEffect(() => {
+    setCpfError('');
+    setCnpjError('');
     if (isEditing && client) {
       reset({
         client_name: client.client_name || '',
@@ -80,6 +93,18 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
     }
   };
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setValue('cpf', formatted);
+    if (cpfError) setCpfError('');
+  };
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJ(e.target.value);
+    setValue('cnpj', formatted);
+    if (cnpjError) setCnpjError('');
+  };
+
   const handleDelete = () => {
     if (clientId && confirm('Tem certeza que deseja excluir este cliente?')) {
       deleteClient(clientId, {
@@ -93,14 +118,38 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
   const onSubmit = (data: FormData) => {
     if (!clientId) return;
 
+    const isPessoaFisica = client?.client_type?.name?.toLowerCase().includes('física') || client?.client_type?.name?.toLowerCase().includes('fisica');
+    const cpfDigits = data.cpf.replace(/\D/g, '');
+    const cnpjDigits = data.cnpj.replace(/\D/g, '');
+
+    if (isPessoaFisica) {
+      if (cpfDigits.length > 0 && cpfDigits.length < 11) {
+        setCpfError('CPF deve ter 11 dígitos');
+        return;
+      }
+      if (cpfDigits.length > 0 && !validateCPF(data.cpf)) {
+        setCpfError('CPF inválido');
+        return;
+      }
+    } else {
+      if (cnpjDigits.length > 0 && cnpjDigits.length < 14) {
+        setCnpjError('CNPJ deve ter 14 dígitos');
+        return;
+      }
+      if (cnpjDigits.length > 0 && !validateCNPJ(data.cnpj)) {
+        setCnpjError('CNPJ inválido');
+        return;
+      }
+    }
+
     const payload: CreateClientData = {
       client_type_id: client?.client_type_id || '',
       client_name: data.client_name,
       company_name: data.company_name,
       email: data.email,
       phone: data.phone,
-      cpf: data.cpf,
-      cnpj: data.cnpj,
+      cpf: isPessoaFisica ? (cpfDigits.length > 0 ? data.cpf : undefined) : undefined,
+      cnpj: !isPessoaFisica ? (cnpjDigits.length > 0 ? data.cnpj : undefined) : undefined,
       address: {
         street: data.street,
         number: parseInt(data.number) || 0,
@@ -121,7 +170,11 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
 
   const handleCancelEdit = () => {
     setIsEditing(false);
+    setCpfError('');
+    setCnpjError('');
   };
+
+  const isPessoaFisica = client?.client_type?.name?.toLowerCase().includes('física') || client?.client_type?.name?.toLowerCase().includes('fisica');
 
   if (isEditing) {
     return (
@@ -149,14 +202,29 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
                 <Label htmlFor="phone">Telefone</Label>
                 <Input {...register('phone')} placeholder="(11) 99999-9999" />
               </div>
-              <div>
-                <Label htmlFor="cpf">CPF</Label>
-                <Input {...register('cpf')} placeholder="000.000.000-00" />
-              </div>
-              <div>
-                <Label htmlFor="cnpj">CNPJ</Label>
-                <Input {...register('cnpj')} placeholder="00.000.000/0001-00" />
-              </div>
+              {isPessoaFisica ? (
+                <div>
+                  <Label htmlFor="cpf">CPF *</Label>
+                  <Input 
+                    {...register('cpf')} 
+                    placeholder="000.000.000-00"
+                    onChange={handleCpfChange}
+                    maxLength={14}
+                  />
+                  {cpfError && <p className="text-xs text-red-500 mt-1">{cpfError}</p>}
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="cnpj">CNPJ *</Label>
+                  <Input 
+                    {...register('cnpj')} 
+                    placeholder="00.000.000/0001-00"
+                    onChange={handleCnpjChange}
+                    maxLength={18}
+                  />
+                  {cnpjError && <p className="text-xs text-red-500 mt-1">{cnpjError}</p>}
+                </div>
+              )}
               <div>
                 <Label htmlFor="cep">CEP</Label>
                 <div className="flex gap-2">
@@ -189,7 +257,7 @@ export function ClientDetailModal({ open, onOpenChange, clientId }: ClientDetail
               <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={!!cpfError || !!cnpjError}>
                 Salvar
               </Button>
             </DialogFooter>

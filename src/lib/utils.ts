@@ -90,12 +90,23 @@ export const formatCurrency = (value: number | undefined | null) => {
 
 export const parseToLocalDate = (dateString: string): Date => {
   if (!dateString) return new Date();
+  
+  if (dateString.includes('/')) {
+    const [day, month, year] = dateString.split('/').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  
   const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
   return new Date(year, month - 1, day);
 };
 
 export const formatDate = (date: string | undefined) => {
   if (!date) return '';
+  
+  if (date.includes('/')) {
+    return date;
+  }
+  
   const localDate = parseToLocalDate(date);
   return localDate.toLocaleDateString('pt-BR');
 };
@@ -174,6 +185,9 @@ export function generateWhatsAppLink({
   status,
   userName,
   companyName,
+  type = 'budget',
+  serviceOrderCode,
+  finalAmount,
 }: {
   phone: string | null | undefined;
   name: string | null | undefined;
@@ -182,6 +196,9 @@ export function generateWhatsAppLink({
   status?: string | null | undefined;
   userName?: string | null | undefined;
   companyName?: string | null | undefined;
+  type?: 'budget' | 'service_order';
+  serviceOrderCode?: string | null | undefined;
+  finalAmount?: number | null | undefined;
 }): string | null {
   if (!phone || !name || !code) return null;
 
@@ -189,16 +206,121 @@ export function generateWhatsAppLink({
   const phoneWithDDI = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
 
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-  const publicUrl = token 
-    ? `${frontendUrl}/public/${token}`
-    : `${frontendUrl}/budget/${code}`;
+  
+  const getPublicUrl = () => {
+    if (token) {
+      return `${frontendUrl}/track/${token}`;
+    }
+    return `${frontendUrl}/budget/${code}`;
+  };
 
+  const publicUrl = getPublicUrl();
   const firstName = userName ? userName.split(' ')[0] : 'nossa equipe';
   const storeName = companyName || 'nossa loja';
 
   const getMessage = () => {
     const baseGreeting = `Olá, aqui é ${firstName} da ${storeName} 👋`;
     
+    if (type === 'service_order') {
+      const osCode = serviceOrderCode || code;
+      const amountFormatted = finalAmount ? formatCurrency(finalAmount) : null;
+      
+      switch (status) {
+        case 'CREATED':
+          return `${baseGreeting}
+
+Recebemos seu equipamento e ele já está em nossa bancada! 🔧
+
+Aguardando análise técnica para identificar o problema.
+
+Você pode acompanhar o status da sua OS pelo link abaixo:
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+
+        case 'IN_PROGRESS':
+          return `${baseGreeting}
+
+Boas notícias! Já começamos o concerto do seu equipamento 🔧
+
+Nossa equipe técnica está trabalhando nele.
+
+Acompanhe o andamento pelo link abaixo:
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+
+        case 'PAUSED':
+          return `${baseGreeting}
+
+Informamos que o serviço do seu equipamento foi pausado ⏸️
+
+Isso pode ocorrer por diversos motivos, como aguardando peças ou retorno do cliente.
+
+Acompanhe o andamento pelo link abaixo:
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+
+        case 'READY':
+          return `${baseGreeting}
+
+Seu equipamento está pronto! 🎉
+
+Valor total: ${amountFormatted || 'a combinar'}
+
+Acompanhe pelo link abaixo:
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+
+        case 'PAID':
+          return `${baseGreeting}
+
+Pagamento confirmado! ✅
+
+Obrigado pela preferência! 😊
+
+Acompanhe os detalhes pelo link abaixo:
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+
+        case 'COMPLETED':
+          return `${baseGreeting}
+
+Seu equipamento foi entregue com sucesso! ✅
+
+Foi um prazer te atender!
+
+Caso precise de algo no futuro, estamos à disposição.
+
+Acompanhe os detalhes pelo link abaixo:
+${publicUrl}
+
+Até a próxima! 👋`;
+
+        case 'CANCELED':
+          return `${baseGreeting}
+
+Sua ordem de serviço foi cancelada.
+
+Caso tenha alguma dúvida ou queira remarcar, estou à disposição.
+
+Acompanhe os detalhes pelo link abaixo:
+${publicUrl}`;
+
+        default:
+          return `${baseGreeting}
+
+Segue o link para acompanhamento da sua OS ${osCode}:
+
+${publicUrl}
+
+Qualquer dúvida, fico à disposição 🙂`;
+      }
+    }
+
     switch (status) {
       case 'DRAFT':
         return `${baseGreeting}

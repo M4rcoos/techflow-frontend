@@ -31,7 +31,7 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-14 bg-card border-b z-50 px-4 flex items-center justify-between">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-card border-b z-50 px-4 flex items-center justify-between">
         <Link to="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
           <div className="w-8 h-8 rounded-lg bg-[#1e40af] flex items-center justify-center">
             <span className="text-white font-bold text-sm">TF</span>
@@ -48,13 +48,13 @@ export function MobileHeader() {
 
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 top-14"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 top-14"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <div className={cn(
-        "fixed top-14 left-0 right-0 bg-card border-b z-50 transition-all duration-300",
+        "lg:hidden fixed top-14 left-0 right-0 bg-card border-b z-50 transition-all duration-300",
         isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
       )}>
         <nav className="p-4 space-y-1">

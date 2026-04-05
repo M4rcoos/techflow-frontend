@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -187,8 +187,9 @@ export function BudgetPrintModal({ open, onOpenChange, budget }: BudgetPrintModa
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} disableCloseOutside>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
+        <DialogClose />
         <DialogHeader>
           <DialogTitle>Imprimir Orçamento {budget.code}</DialogTitle>
         </DialogHeader>

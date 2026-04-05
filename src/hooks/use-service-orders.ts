@@ -119,3 +119,24 @@ export const useRegisterPayment = () => {
     },
   });
 };
+
+export const useUpdateServiceOrderDeliveryDate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, delivery_date }: { id: string; delivery_date: string }) => 
+      serviceOrderService.updateDeliveryDate(id, delivery_date),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['serviceOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['serviceOrder'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['urgent'] });
+      toast.success('Data de entrega atualizada com sucesso!');
+    },
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const message = err.response?.data?.message || 'Erro ao atualizar data de entrega';
+      toast.error(message);
+    },
+  });
+};

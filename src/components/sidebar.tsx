@@ -55,7 +55,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   return (
     <aside 
       className={cn(
-        "fixed top-0 left-0 h-screen bg-card border-r flex flex-col z-40 transition-all duration-300",
+        "hidden lg:flex fixed top-0 left-0 h-screen bg-card border-r flex-col z-40 transition-all duration-300",
         collapsed ? "w-16" : "w-56"
       )}
     >

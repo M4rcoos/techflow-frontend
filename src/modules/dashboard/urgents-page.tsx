@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, AlertCircle, FileText, Wrench, Calendar } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { formatDate } from '../../lib/utils';
 
@@ -47,6 +47,7 @@ export function UrgentsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlFilter = searchParams.get('filter');
+  const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState<'expiring' | 'urgent'>(
     urlFilter === 'due_today' ? 'expiring' : 'urgent'
@@ -59,7 +60,13 @@ export function UrgentsPage() {
       const response = await api.get<{ data: UrgentData }>('/api/dashboard/urgent');
       return response.data.data;
     },
+    staleTime: 0,
   });
+
+  const handleTabChange = (tab: 'expiring' | 'urgent') => {
+    setActiveTab(tab);
+    queryClient.invalidateQueries({ queryKey: ['urgent'] });
+  };
 
   const budgetsExpired = data?.budgets.filter(i => i.urgencyStatus === 'EXPIRED') || [];
   const budgetsDueToday = data?.budgets.filter(i => i.urgencyStatus === 'DUE_TODAY') || [];
@@ -119,7 +126,7 @@ export function UrgentsPage() {
         <div className="flex gap-4 mb-6">
           <Button
             variant={activeTab === 'urgent' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('urgent')}
+            onClick={() => handleTabChange('urgent')}
             className="flex items-center gap-2"
           >
             <AlertCircle className="w-4 h-4" />
@@ -132,7 +139,7 @@ export function UrgentsPage() {
           </Button>
           <Button
             variant={activeTab === 'expiring' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('expiring')}
+            onClick={() => handleTabChange('expiring')}
             className="flex items-center gap-2"
           >
             <AlertTriangle className="w-4 h-4" />

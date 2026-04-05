@@ -14,7 +14,7 @@ export const useDashboard = (filters?: DashboardFilters) => {
     queryFn: () => dashboardService.getDashboard(filters),
     enabled: !!getToken(),
     refetchInterval: REFETCH_INTERVAL,
-    staleTime: 5000,
+    staleTime: filters?.startDate || filters?.endDate ? 0 : 5000,
   });
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export const usePaymentStats = (filters?: DashboardFilters) => {
     queryKey: ['payment-stats', filters],
     queryFn: () => dashboardService.getPaymentStats(filters),
     enabled: !!getToken(),
-    staleTime: 5000,
+    staleTime: filters?.startDate || filters?.endDate ? 0 : 5000,
   });
 
   return {

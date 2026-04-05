@@ -83,8 +83,8 @@ export const dashboardService = {
 
   async getPaymentStats(filters?: DashboardFilters): Promise<PaymentStats[]> {
     const params = new URLSearchParams();
-    if (filters?.startDate) params.append('start_date', filters.startDate);
-    if (filters?.endDate) params.append('end_date', filters.endDate);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
     
     const response = await api.get('/api/service-orders/payment-stats', { 
       params: Object.fromEntries(params)

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Printer, User, Calendar, FileText, Wrench, CreditCard, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Printer, User, Calendar, FileText, Wrench, CreditCard, MessageCircle, Check, X, Edit3, Save, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useServiceOrder } from '../../hooks/use-service-orders';
 import { WarrantySection } from './warranty-section';
-import { useUpdateServiceOrderObservation, useUpdateServiceOrderStatus, useRegisterPayment } from '../../hooks/use-service-orders';
+import { useUpdateServiceOrderObservation, useUpdateServiceOrderStatus, useRegisterPayment, useUpdateServiceOrderDeliveryDate } from '../../hooks/use-service-orders';
 import { formatDate, formatCurrency, translatePaymentType, generateWhatsAppLink } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getUser } from '../../lib/api';
@@ -29,9 +29,14 @@ export function ServiceOrderDetailPage() {
   const updateObservation = useUpdateServiceOrderObservation();
   const updateStatus = useUpdateServiceOrderStatus();
   const registerPayment = useRegisterPayment();
+  const updateDeliveryDate = useUpdateServiceOrderDeliveryDate();
   const [observation, setObservation] = useState('');
   const [isEditingObservation, setIsEditingObservation] = useState(false);
   const [showPaymentSection, setShowPaymentSection] = useState(false);
+  const [isEditingDeliveryDate, setIsEditingDeliveryDate] = useState(false);
+  const [newDeliveryDate, setNewDeliveryDate] = useState('');
+  const observationRef = useRef<HTMLTextAreaElement>(null);
+  const justSavedRef = useRef(false);
 
   useRealTimeSync(true, 3000);
   const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED');
@@ -42,7 +47,10 @@ export function ServiceOrderDetailPage() {
   useEffect(() => {
     if (serviceOrder) {
       setObservation(serviceOrder.observation || '');
-      setIsEditingObservation(!!serviceOrder.observation);
+      if (!justSavedRef.current) {
+        setIsEditingObservation(!!serviceOrder.observation);
+      }
+      justSavedRef.current = false;
     }
   }, [serviceOrder]);
 
@@ -52,11 +60,34 @@ export function ServiceOrderDetailPage() {
     }
   }, [serviceOrder]);
 
+  useEffect(() => {
+    if (serviceOrder?.delivery_date) {
+      const date = new Date(serviceOrder.delivery_date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      setNewDeliveryDate(`${year}-${month}-${day}`);
+    }
+  }, [serviceOrder?.delivery_date]);
+
+  const handleSaveDeliveryDate = async () => {
+    if (!id || !newDeliveryDate) return;
+    try {
+      await updateDeliveryDate.mutateAsync({ id, delivery_date: newDeliveryDate });
+      setIsEditingDeliveryDate(false);
+      refetch();
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
   const handleSaveObservation = async () => {
     if (!id) return;
     try {
       await updateObservation.mutateAsync({ id, observation });
+      justSavedRef.current = true;
       setIsEditingObservation(false);
+      observationRef.current?.blur();
       refetch();
     } catch (error) {
       // Error handled in hook
@@ -285,18 +316,22 @@ export function ServiceOrderDetailPage() {
                 const waLink = generateWhatsAppLink({
                   phone: so?.budget?.client?.phone,
                   name: clientName,
-                  code: so?.budget?.code,
-                  token: so?.budget?.public_token,
+                  code: so?.code,
+                  token: so?.public_token,
+                  status: so?.status?.name,
                   userName: currentUser?.name,
                   companyName: currentUser?.company_name,
+                  type: 'service_order',
+                  serviceOrderCode: so?.code,
+                  finalAmount: so?.final_amount || so?.budget?.total,
                 });
                 if (waLink) {
                   window.open(waLink, '_blank');
                 } else {
-                  toast.error('Cliente sem telefone ou orçamento não encontrado');
+                  toast.error('Cliente sem telefone cadastrado');
                 }
               }}
-              title="Enviar orçamento via WhatsApp"
+              title="Enviar atualização via WhatsApp"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               WhatsApp
@@ -471,8 +506,34 @@ export function ServiceOrderDetailPage() {
                 <span className="font-medium">Datas</span>
               </div>
               <p className="text-sm">Criado em: {formatDate(so?.created_at)}</p>
-              {so?.delivery_date && (
-                <p className="text-sm">Previsão de entrega: {formatDate(so?.delivery_date)}</p>
+              {isEditingDeliveryDate ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={newDeliveryDate}
+                    onChange={(e) => setNewDeliveryDate(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  />
+                  <Button size="sm" onClick={handleSaveDeliveryDate} disabled={updateDeliveryDate.isPending}>
+                    <Save className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setIsEditingDeliveryDate(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm">
+                    Previsão de entrega: {so?.delivery_date ? formatDate(so?.delivery_date) : 'Não definida'}
+                  </p>
+                  <button
+                    onClick={() => setIsEditingDeliveryDate(true)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Editar data de entrega"
+                  >
+                    <Edit3 className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                </div>
               )}
               {so?.delivered_at && (
                 <p className="text-sm">Entregue em: {formatDate(so?.delivered_at)}</p>
@@ -545,51 +606,108 @@ export function ServiceOrderDetailPage() {
           ))}
         </div>
 
-        <Card className="mb-6">
-          <CardContent className="py-4">
+        <Card className="mb-6 border-slate-200">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                <span className="font-medium">Observações Técnicas</span>
+                <FileText className="w-4 h-4 text-slate-500" />
+                <span className="font-medium text-slate-700">Observações Técnicas</span>
               </div>
-              {!isEditingObservation && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsEditingObservation(true)}
-                >
-                  {serviceOrder.observation ? 'Editar' : 'Adicionar'}
-                </Button>
+              {!updateObservation.isPending && (
+                isEditingObservation ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleSaveObservation}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50 h-8 px-2"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setObservation(serviceOrder?.observation || '');
+                        setIsEditingObservation(false);
+                      }}
+                      className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 h-8 px-2"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditingObservation(true)}
+                    className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 h-8 px-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </Button>
+                )
               )}
             </div>
-            {isEditingObservation ? (
+
+            {updateObservation.isPending ? (
+              <div className="flex items-center justify-center py-8 text-slate-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <span className="text-sm">Salvando...</span>
+              </div>
+            ) : isEditingObservation ? (
               <div className="space-y-2">
                 <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  ref={observationRef}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  rows={4}
                   value={observation}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setObservation(e.target.value)}
-                  placeholder="Adicione observações sobre o serviço..."
+                  onChange={(e) => setObservation(e.target.value)}
+                  placeholder="Descreva observações técnicas, diagnósticos, procedimentos realizados..."
+                  autoFocus
                 />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSaveObservation}>
-                    Salvar
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      setObservation(serviceOrder.observation || '');
-                      setIsEditingObservation(false);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">
+                    {observation.length} caracteres
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setObservation(serviceOrder?.observation || '');
+                        setIsEditingObservation(false);
+                      }}
+                      className="h-8"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveObservation}
+                      className="h-8 bg-blue-600 hover:bg-blue-700"
+                      disabled={observation === (serviceOrder?.observation || '')}
+                    >
+                      <Save className="w-3 h-3 mr-1" />
+                      Salvar
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {serviceOrder.observation || 'Nenhuma observação.'}
-              </p>
+              <div 
+                className="min-h-[60px] rounded-lg bg-slate-50 p-3 cursor-text transition-colors hover:bg-slate-100"
+                onClick={() => setIsEditingObservation(true)}
+              >
+                {serviceOrder?.observation ? (
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    {serviceOrder.observation}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">
+                    Clique para adicionar observações técnicas...
+                  </p>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

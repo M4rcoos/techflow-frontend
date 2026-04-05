@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +11,7 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../hooks';
 import { useCep } from '../../hooks/use-cep';
 import type { RegisterData } from '../../types';
+import { formatCNPJ, validateCNPJ } from '../../lib/validators';
 
 const registerSchema = z.object({
   company_name: z.string().min(3, 'Nome da empresa deve ter no mínimo 3 caracteres'),
@@ -31,6 +33,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export function RegisterPage() {
   const { register: registerUser, isRegistering } = useAuth();
   const { searchCep, isLoading: isCepLoading } = useCep();
+  const [cnpjError, setCnpjError] = useState('');
+  
   const {
     register,
     handleSubmit,
@@ -53,10 +57,29 @@ export function RegisterPage() {
     }
   };
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJ(e.target.value);
+    setValue('cnpj', formatted);
+    if (cnpjError) setCnpjError('');
+  };
+
   const onSubmit = (data: RegisterFormData) => {
+    const cnpjDigits = data.cnpj?.replace(/\D/g, '') || '';
+    
+    if (cnpjDigits.length > 0) {
+      if (cnpjDigits.length < 14) {
+        setCnpjError('CNPJ deve ter 14 dígitos');
+        return;
+      }
+      if (!validateCNPJ(data.cnpj || '')) {
+        setCnpjError('CNPJ inválido');
+        return;
+      }
+    }
+
     const payload: RegisterData = {
       company_name: data.company_name,
-      cnpj: data.cnpj,
+      cnpj: cnpjDigits.length > 0 ? data.cnpj : undefined,
       phone: data.phone,
       name: data.name,
       email: data.email,
@@ -142,8 +165,11 @@ export function RegisterPage() {
                       id="cnpj"
                       placeholder="00.000.000/0001-00"
                       className="h-10 rounded-lg mt-1"
+                      maxLength={18}
                       {...register('cnpj')}
+                      onChange={handleCnpjChange}
                     />
+                    {cnpjError && <p className="text-xs text-red-500 mt-1">{cnpjError}</p>}
                   </div>
 
                   <div>
@@ -326,7 +352,7 @@ export function RegisterPage() {
             <Button
               type="submit"
               className="w-full h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold mt-6"
-              disabled={isRegistering}
+              disabled={isRegistering || !!cnpjError}
             >
               {isRegistering ? 'Criando conta...' : 'Criar Conta Grátis'}
             </Button>

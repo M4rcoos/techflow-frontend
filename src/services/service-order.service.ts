@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 export interface ServiceOrder {
   id: string;
   code: string;
+  public_token?: string;
   budget: {
     id: string;
     code: string;
@@ -63,6 +64,7 @@ export interface ServiceOrder {
   payment_type?: 'CASH' | 'PIX' | 'CREDIT' | 'DEBIT' | 'BANK_SLIP';
   paid_at?: string;
   delivered_at?: string;
+  delivery_date?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -111,6 +113,11 @@ export const serviceOrderService = {
 
   async updateObservation(id: string, observation: string): Promise<ServiceOrder> {
     const response = await api.patch(`/api/service-orders/${id}/observation`, { observation });
+    return response.data.data;
+  },
+
+  async updateDeliveryDate(id: string, delivery_date: string): Promise<ServiceOrder> {
+    const response = await api.patch(`/api/service-orders/${id}/delivery-date`, { delivery_date });
     return response.data.data;
   },
 

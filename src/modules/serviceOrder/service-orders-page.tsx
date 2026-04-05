@@ -189,18 +189,22 @@ export function ServiceOrdersPage() {
                               const waLink = generateWhatsAppLink({
                                 phone: order.budget?.client?.phone,
                                 name: clientName,
-                                code: order.budget?.code,
-                                token: order.budget?.public_token,
+                                code: order.code,
+                                token: order.public_token,
+                                status: order.status?.name,
                                 userName: currentUser?.name,
                                 companyName: currentUser?.company_name,
+                                type: 'service_order',
+                                serviceOrderCode: order.code,
+                                finalAmount: order.final_amount || order.budget?.total,
                               });
                               if (waLink) {
                                 window.open(waLink, '_blank');
                               } else {
-                                toast.error('Cliente sem telefone ou orçamento não encontrado');
+                                toast.error('Cliente sem telefone cadastrado');
                               }
                             }}
-                            title="Enviar orçamento via WhatsApp"
+                            title="Enviar atualização via WhatsApp"
                           >
                             <MessageCircle className="w-4 h-4 mr-1" />
                             WhatsApp
