@@ -17,6 +17,7 @@ import { useCep } from '../../hooks/use-cep';
 import type { CreateClientData, ClientType } from '../../types';
 import { X, Loader2 } from 'lucide-react';
 import { formatCPF, formatCNPJ, validateCPF, validateCNPJ } from '../../lib/validators';
+import { toast } from 'sonner';
 
 interface ClientFormModalProps {
   open: boolean;
@@ -140,15 +141,17 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
   };
 
   const onSubmit = (data: FormData) => {
-    const cpfDigits = data.cpf.replace(/\D/g, '');
-    const cnpjDigits = data.cnpj.replace(/\D/g, '');
+    const cpfValue = data.cpf || (prefillDoc && isDocCpf ? prefillDoc : '');
+    const cnpjValue = data.cnpj || (prefillDoc && !isDocCpf ? prefillDoc : '');
+    const cpfDigits = cpfValue.replace(/\D/g, '');
+    const cnpjDigits = cnpjValue.replace(/\D/g, '');
 
     if (isPessoaFisica && cpfDigits.length > 0) {
       if (cpfDigits.length < 11) {
         setCpfError('CPF deve ter 11 dígitos');
         return;
       }
-      if (!validateCPF(data.cpf)) {
+      if (!validateCPF(cpfValue)) {
         setCpfError('CPF inválido');
         return;
       }
@@ -159,20 +162,35 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
         setCnpjError('CNPJ deve ter 14 dígitos');
         return;
       }
-      if (!validateCNPJ(data.cnpj)) {
+      if (!validateCNPJ(cnpjValue)) {
         setCnpjError('CNPJ inválido');
         return;
       }
     }
 
+    if (cpfDigits.length === 0 && cnpjDigits.length === 0 && !prefillDoc) {
+      if (isPessoaFisica) {
+        setCpfError('CPF é obrigatório');
+      } else if (isPessoaJuridica) {
+        setCnpjError('CNPJ é obrigatório');
+      }
+      return;
+    }
+
+    const clientTypeId = data.client_type_id || defaultPfType?.id || clientTypes[0]?.id;
+    if (!clientTypeId) {
+      toast.error('Carregue a página novamente - tipo de cliente não encontrado');
+      return;
+    }
+
     const payload: CreateClientData = {
-      client_type_id: data.client_type_id || defaultPfType?.id || clientTypes[0]?.id || '',
+      client_type_id: clientTypeId,
       client_name: data.client_name || undefined,
       company_name: data.company_name || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
-      cpf: (isPessoaFisica && prefillDoc) ? prefillDoc : (cpfDigits.length > 0 ? data.cpf : undefined),
-      cnpj: (isPessoaJuridica && prefillDoc) ? prefillDoc : (cnpjDigits.length > 0 ? data.cnpj : undefined),
+      cpf: (isPessoaFisica && prefillDoc) ? prefillDoc : (cpfDigits.length > 0 ? cpfValue : undefined),
+      cnpj: (isPessoaJuridica && prefillDoc) ? prefillDoc : (cnpjDigits.length > 0 ? cnpjValue : undefined),
       address: data.street ? {
         street: data.street,
         number: parseInt(data.number) || 0,
@@ -280,6 +298,7 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     id="cpf" 
                     placeholder="000.000.000-00"
                     maxLength={14}
+                    {...register('cpf')}
                     onChange={handleCpfChange}
                     defaultValue={prefillDoc && isDocCpf ? prefillDoc : undefined}
                     disabled={!!(prefillDoc && isDocCpf)}
@@ -296,6 +315,7 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     id="cnpj" 
                     placeholder="00.000.000/0001-00"
                     maxLength={18}
+                    {...register('cnpj')}
                     onChange={handleCnpjChange}
                     defaultValue={prefillDoc && !isDocCpf ? prefillDoc : undefined}
                     disabled={!!(prefillDoc && !isDocCpf)}
@@ -313,6 +333,7 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     id="cpf" 
                     placeholder="000.000.000-00"
                     maxLength={14}
+                    {...register('cpf')}
                     onChange={handleCpfChange}
                   />
                   {cpfError && <p className="text-xs text-red-500 mt-1">{cpfError}</p>}
@@ -325,6 +346,7 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     id="cnpj" 
                     placeholder="00.000.000/0001-00"
                     maxLength={18}
+                    {...register('cnpj')}
                     onChange={handleCnpjChange}
                   />
                   {cnpjError && <p className="text-xs text-red-500 mt-1">{cnpjError}</p>}
