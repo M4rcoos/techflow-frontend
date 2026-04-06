@@ -17,19 +17,19 @@ export function StatCard({ title, value, icon: Icon, onClick, description, trend
   return (
     <div 
       className={cn(
-        "bg-card border rounded-lg p-5 transition-all cursor-pointer relative",
+        "bg-card border rounded-lg p-4 sm:p-5 transition-all cursor-pointer relative overflow-hidden",
         onClick && "hover:border-[#1e40af]/50 hover:shadow-sm"
       )}
       onClick={onClick}
       onMouseEnter={() => description && setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="flex-1">
-          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-          <p className="text-2xl font-semibold text-foreground">{value}</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight break-words">{value}</p>
         </div>
-        <div className="p-2 bg-muted rounded-lg">
+        <div className="p-2 bg-muted rounded-lg self-start sm:self-auto">
           <Icon className="w-5 h-5 text-[#1e40af]" />
         </div>
       </div>

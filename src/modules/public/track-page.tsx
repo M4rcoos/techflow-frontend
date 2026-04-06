@@ -10,7 +10,6 @@ import {
   Printer,
   RefreshCw,
   Truck,
-  Settings,
   MapPin,
   Mail
 } from 'lucide-react';
@@ -32,11 +31,13 @@ const statusConfig: Record<string, {
   SENT: { label: 'Aguardando Aprovação', color: 'bg-orange-500', bgColor: 'bg-orange-50', textColor: 'text-orange-700', borderColor: 'border-orange-200', icon: Clock },
   APPROVED: { label: 'Aprovado', color: 'bg-green-500', bgColor: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200', icon: CheckCircle },
   REJECTED: { label: 'Rejeitado', color: 'bg-red-500', bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200', icon: XCircle },
-  CREATED: { label: 'OS Criada', color: 'bg-purple-500', bgColor: 'bg-purple-50', textColor: 'text-purple-700', borderColor: 'border-purple-200', icon: Package },
-  IN_PROGRESS: { label: 'Em Serviço', color: 'bg-indigo-500', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700', borderColor: 'border-indigo-200', icon: Settings },
+  CREATED: { label: 'Serviço Agendado', color: 'bg-purple-500', bgColor: 'bg-purple-50', textColor: 'text-purple-700', borderColor: 'border-purple-200', icon: Clock },
+  IN_PROGRESS: { label: 'Em Serviço', color: 'bg-indigo-500', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700', borderColor: 'border-indigo-200', icon: Wrench },
+  PAUSED: { label: 'Pausado', color: 'bg-amber-500', bgColor: 'bg-amber-50', textColor: 'text-amber-700', borderColor: 'border-amber-200', icon: Clock },
   READY: { label: 'Pronto para Retirada', color: 'bg-cyan-500', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', borderColor: 'border-cyan-200', icon: Truck },
   PAID: { label: 'Pago', color: 'bg-green-600', bgColor: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200', icon: CheckCircle },
   COMPLETED: { label: 'Entregue', color: 'bg-emerald-500', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', borderColor: 'border-emerald-200', icon: CheckCircle },
+  CANCELED: { label: 'Cancelado', color: 'bg-gray-500', bgColor: 'bg-gray-50', textColor: 'text-gray-700', borderColor: 'border-gray-200', icon: XCircle },
 };
 
 const steps = [
@@ -54,11 +55,14 @@ const stepIndex: Record<string, number> = {
   IN_ANALYSIS: 1,
   SENT: 2,
   APPROVED: 3,
+  CREATED: 3,
   IN_PROGRESS: 4,
+  PAUSED: 4,
   READY: 5,
+  PAID: 5,
   COMPLETED: 6,
   REJECTED: -1,
-  PAID: 5,
+  CANCELED: -1,
 };
 
 export function TrackPage() {
@@ -164,10 +168,16 @@ export function TrackPage() {
     );
   }
 
-  const currentStep = stepIndex[data.budget_status] ?? stepIndex[data.status] ?? 0;
+  const isServiceOrder = data.type === 'service_order';
+  const currentStep = isServiceOrder 
+    ? (stepIndex[data.status] ?? 3) 
+    : (stepIndex[data.budget_status] ?? stepIndex[data.status] ?? 0);
   const isRejected = data.status === 'REJECTED' || data.budget_status === 'REJECTED';
-  const canApprove = data.budget_status === 'SENT';
-  const statusInfo = statusConfig[data.budget_status] || statusConfig[data.status] || statusConfig.DRAFT;
+  const isCanceled = data.status === 'CANCELED';
+  const canApprove = data.budget_status === 'SENT' && !isServiceOrder;
+  const statusInfo = isServiceOrder 
+    ? (statusConfig[data.status] || statusConfig.CREATED)
+    : (statusConfig[data.budget_status] || statusConfig[data.status] || statusConfig.DRAFT);
 
   const items = data.budget?.items || data.items || [];
   const finalAmount = data.serviceOrder?.final_amount || data.budget?.total || data.total || 0;
@@ -247,9 +257,16 @@ export function TrackPage() {
           </div>
         </div>
 
-        {!isRejected ? (
+        {!isRejected && !isCanceled ? (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Andamento</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Andamento</h3>
+              {isServiceOrder && (
+                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                  Ordem de Serviço
+                </span>
+              )}
+            </div>
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-10"></div>
               <div 
@@ -281,7 +298,9 @@ export function TrackPage() {
         ) : (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <XCircle className="w-12 h-12 text-red-500 mx-auto mb-2" />
-            <h3 className="font-semibold text-red-700">Orçamento Rejeitado</h3>
+            <h3 className="font-semibold text-red-700">
+              {isCanceled ? 'Ordem de Serviço Cancelada' : 'Orçamento Rejeitado'}
+            </h3>
             <p className="text-sm text-red-600 mt-1">Entre em contato para mais informações.</p>
           </div>
         )}
@@ -386,7 +405,98 @@ export function TrackPage() {
           </div>
         )}
 
-        {!canApprove && !isRejected && data.owner.phone && (
+        {isServiceOrder && data.serviceOrder && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Detalhes do Serviço</h3>
+            <div className="space-y-3">
+              {data.budget?.items?.map((item, index) => (
+                <div key={index} className="border-b pb-3 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      {item.model && <p className="text-sm text-gray-500">Modelo: {item.model}</p>}
+                      {item.mark && <p className="text-sm text-gray-500">Marca: {item.mark}</p>}
+                    </div>
+                  </div>
+                  {item.reported_problem && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                      <p className="text-gray-500">Problema relatado:</p>
+                      <p>{item.reported_problem}</p>
+                    </div>
+                  )}
+                  {item.diagnosed_problem && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                      <p className="text-blue-600">Diagnóstico técnico:</p>
+                      <p>{item.diagnosed_problem}</p>
+                    </div>
+                  )}
+                  {item.service_performed && (
+                    <div className="mt-2 p-2 bg-green-50 rounded text-sm">
+                      <p className="text-green-600">Serviço realizado:</p>
+                      <p>{item.service_performed}</p>
+                    </div>
+                  )}
+                  {item.services && item.services.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium text-gray-600">Serviços executados:</p>
+                      {item.services.map((service, i) => (
+                        <div key={i} className="flex justify-between text-sm ml-2 mt-1">
+                          <span>{service.name} (x{service.quantity})</span>
+                          <span className="text-gray-600">{formatCurrency(service.total)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {data.serviceOrder.discount > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Subtotal:</span>
+                  <span className="text-gray-600">{formatCurrency(finalAmount + data.serviceOrder.discount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Desconto:</span>
+                  <span className="text-green-600">-{formatCurrency(data.serviceOrder.discount)}</span>
+                </div>
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t flex justify-between items-center">
+              <span className="font-semibold text-lg">Total</span>
+              <span className="text-2xl font-bold text-indigo-600">
+                {formatCurrency(finalAmount)}
+              </span>
+            </div>
+            {data.serviceOrder.delivered_at && (
+              <div className="mt-4 pt-4 border-t flex items-center gap-2 text-sm text-gray-500">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Equipamento entregue em {new Date(data.serviceOrder.delivered_at).toLocaleDateString('pt-BR')}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {data.timeline && data.timeline.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Histórico</h3>
+            <div className="space-y-3">
+              {data.timeline.map((event, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2"></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">{event.description}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(event.date).toLocaleDateString('pt-BR')} às {new Date(event.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!canApprove && !isRejected && !isCanceled && data.owner.phone && (
           <Button
             variant="outline"
             onClick={handleWhatsApp}

@@ -36,8 +36,10 @@ export const useAuth = () => {
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (error) {
-      const err = error as Error;
-      toast.error(err.message || 'Erro ao fazer login');
+      const err = error as Error & { message?: string };
+      if (err.message && !['Usuário não encontrado', 'Email não verificado'].includes(err.message)) {
+        toast.error(err.message || 'Erro ao fazer login');
+      }
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -70,8 +72,7 @@ export const useAuth = () => {
     authService.logout();
     clearAuth();
     setUserState(null);
-    toast.success('Logout realizado');
-    navigate('/');
+    window.location.href = '/login';
   };
 
   return {

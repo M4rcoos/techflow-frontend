@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Zap, Mail, Lock } from 'lucide-react';
+import { Zap, Mail, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -22,12 +22,20 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    login(data);
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      await login(data);
+    } catch {
+      setError('root', {
+        type: 'manual',
+        message: 'Email ou senha incorretos',
+      });
+    }
   };
 
   return (
@@ -54,6 +62,13 @@ export function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {errors.root && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-medium">{errors.root.message}</p>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
                 Email

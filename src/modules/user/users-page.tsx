@@ -9,7 +9,6 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
-import { Navbar } from '../../components/navbar';
 import { Pagination } from '../../components/ui/pagination';
 import { PageHeader } from '../../components/page-header';
 import { Users, Plus, Edit, Trash2, X, KeyRound } from 'lucide-react';
@@ -173,9 +172,18 @@ export function UsersPage() {
     return badges[role] || 'bg-gray-100 text-gray-800';
   };
 
+  const translateRole = (role: string) => {
+    const roles: Record<string, string> = {
+      OWNER: 'Dono',
+      ADMIN: 'Administrador',
+      TECHNICIAN: 'Técnico',
+      ATTENDANT: 'Atendente',
+    };
+    return roles[role] || role;
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showNavigation />
       <main className="container mx-auto px-4 py-8">
         <PageHeader
           title="Funcionários"
@@ -221,7 +229,7 @@ export function UsersPage() {
                     
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleBadge(user.role || 'ATTENDANT')}`}>
-                        {user.role || 'ATTENDANT'}
+                        {translateRole(user.role || 'ATTENDANT')}
                       </span>
                       
                       <div className="flex gap-2">

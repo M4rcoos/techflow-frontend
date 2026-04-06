@@ -10,8 +10,6 @@ import { formatDate, formatCurrency, translatePaymentType, generateWhatsAppLink 
 import { toast } from 'sonner';
 import { getUser } from '../../lib/api';
 import type { User as UserType } from '../../types';
-import { useRealTimeSync } from '../../hooks/use-real-time';
-
 const statusLabels: Record<string, string> = {
   CREATED: 'Criada',
   IN_PROGRESS: 'Em Concerto',
@@ -38,7 +36,6 @@ export function ServiceOrderDetailPage() {
   const observationRef = useRef<HTMLTextAreaElement>(null);
   const justSavedRef = useRef(false);
 
-  useRealTimeSync(true, 3000);
   const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED');
   const [discount, setDiscount] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
@@ -294,9 +291,9 @@ export function ServiceOrderDetailPage() {
           Voltar
         </Button>
 
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
               <h1 className="text-2xl font-semibold">OS {serviceOrder.code}</h1>
               <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">
                 {statusLabels[serviceOrder.status?.name] || serviceOrder.status?.name}
@@ -395,7 +392,7 @@ export function ServiceOrderDetailPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-muted-foreground mb-1 block">Desconto</label>
                     <div className="flex">
@@ -462,7 +459,7 @@ export function ServiceOrderDetailPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   <Button
                     size="sm"
                     onClick={handleRegisterPayment}

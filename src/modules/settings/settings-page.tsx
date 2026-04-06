@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useRoleAccess } from '../../hooks/use-role-access';
 import { settingsService } from '../../services/settings.service';
 import type { SettingsData } from '../../services/settings.service';
-import { Navbar } from '../../components/navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -81,7 +80,6 @@ export function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showNavigation />
       <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Configurações</h1>

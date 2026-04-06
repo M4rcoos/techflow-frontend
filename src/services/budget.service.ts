@@ -25,10 +25,24 @@ interface BudgetItem {
 }
 
 export const budgetService = {
-  async list(page = 1, limit = 10, search = '', filters?: { expiring?: boolean; expired?: boolean }): Promise<ListResponse> {
+  async list(
+    page = 1, 
+    limit = 10, 
+    search = '', 
+    filters?: { 
+      expiring?: boolean; 
+      expired?: boolean;
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ): Promise<ListResponse> {
     const params: any = { page, limit, search };
     if (filters?.expiring) params.expiring = 'true';
     if (filters?.expired) params.expired = 'true';
+    if (filters?.status && filters.status !== 'ALL') params.status = filters.status;
+    if (filters?.startDate) params.startDate = filters.startDate;
+    if (filters?.endDate) params.endDate = filters.endDate;
     const response = await api.get<ApiResponse<{ budgets: BudgetListItem[]; pagination: ListResponse['pagination'] }>>('/api/budgets', { params });
     const data = response.data.data || { budgets: [], pagination: undefined };
     return {

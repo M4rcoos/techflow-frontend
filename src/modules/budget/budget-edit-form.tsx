@@ -177,14 +177,14 @@ export function BudgetEditForm({ budgetId, initialItems, onSave, onCancel }: Bud
   return (
     <Card className="border-purple-200">
       <CardContent className="p-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <div>
             <h3 className="font-semibold text-lg">Editar Orçamento</h3>
             <p className="text-sm text-muted-foreground">
               Adicione serviços/peças e faça o diagnóstico
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={onCancel} disabled={isSaving}>
               <X className="w-4 h-4 mr-2" />
               Cancelar
@@ -323,14 +323,14 @@ export function BudgetEditForm({ budgetId, initialItems, onSave, onCancel }: Bud
                       </div>
                     ) : (
                       <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <span className="text-sm text-amber-800">
                             Este item precisa de um diagnóstico técnico
                           </span>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                            className="border-amber-300 text-amber-700 hover:bg-amber-100 flex-shrink-0"
                             onClick={() => setEditingDiagnosedId(item.id || null)}
                           >
                             <Wrench className="w-4 h-4 mr-1" />

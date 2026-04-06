@@ -77,7 +77,9 @@ const isRateLimitError = (error: unknown): error is { response: { data: RateLimi
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
+    
+    if (error.response?.status === 401 && !isAuthRequest) {
       clearAuth();
       window.location.href = '/login';
     }

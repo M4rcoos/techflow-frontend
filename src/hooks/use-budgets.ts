@@ -4,7 +4,18 @@ import type { CreateBudgetData } from '../types';
 import { toast } from 'sonner';
 import { getToken } from '../lib/api';
 
-export const useBudgets = (page = 1, limit = 10, search = '', filters?: { expiring?: boolean; expired?: boolean }) => {
+export const useBudgets = (
+  page = 1, 
+  limit = 10, 
+  search = '', 
+  filters?: { 
+    expiring?: boolean; 
+    expired?: boolean;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+) => {
   const queryClient = useQueryClient();
   const hasAuth = !!getToken();
 

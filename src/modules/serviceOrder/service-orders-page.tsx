@@ -11,8 +11,6 @@ import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getUser } from '../../lib/api';
 import type { User } from '../../types';
-import { useRealTimeSync } from '../../hooks/use-real-time';
-
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   CREATED: { label: 'Criada', color: 'text-slate-700', bgColor: 'bg-slate-100' },
   IN_PROGRESS: { label: 'Em Concerto', color: 'text-blue-700', bgColor: 'bg-blue-100' },
@@ -31,8 +29,6 @@ export function ServiceOrdersPage() {
   const statusParam = searchParams.get('status');
   const [statusFilter, setStatusFilter] = useState<string>(statusParam || '');
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '');
-
-  useRealTimeSync(true, 5000);
 
   useEffect(() => {
     const statusFromUrl = searchParams.get('status');
@@ -78,33 +74,32 @@ export function ServiceOrdersPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Ordens de Serviço</h1>
+            <h1 className="text-xl md:text-2xl font-semibold text-foreground">Ordens de Serviço</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {pagination ? `${pagination.total} OS encontrada(s)` : 'Gerencie suas ordens de serviço'}
             </p>
           </div>
         </div>
 
-        <div className="bg-card border rounded-lg p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <SearchFilter
-                placeholder="Buscar por OS, cliente ou equipamento..."
-                onSearch={handleSearchChange}
-              />
-            </div>
+        <div className="bg-card border rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+          <div className="flex flex-col gap-3">
+            <SearchFilter
+              placeholder="Buscar por OS, cliente ou equipamento..."
+              onSearch={handleSearchChange}
+            />
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
           <Button
             variant={statusFilter === '' ? 'default' : 'outline'}
             size="sm"
             onClick={() => handleStatusFilter('')}
+            className="flex-shrink-0 text-xs md:text-sm"
           >
             Todos
           </Button>
@@ -114,6 +109,7 @@ export function ServiceOrdersPage() {
               variant={statusFilter === key ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleStatusFilter(key)}
+              className="flex-shrink-0 text-xs md:text-sm"
             >
               {config.label}
             </Button>
@@ -125,8 +121,8 @@ export function ServiceOrdersPage() {
         ) : serviceOrders.length === 0 ? (
           <Card className="border">
             <CardContent className="py-12 text-center">
-              <Wrench className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Nenhuma ordem de serviço encontrada</h3>
+              <Wrench className="w-10 h-10 md:w-12 md:h-12 mx-auto text-muted-foreground/30 mb-4" />
+              <h3 className="text-base md:text-lg font-medium mb-2">Nenhuma ordem de serviço encontrada</h3>
               <p className="text-sm text-muted-foreground">
                 Ordens de serviço são criadas automaticamente quando um orçamento é aprovado.
               </p>
@@ -144,44 +140,50 @@ export function ServiceOrdersPage() {
                     className="border hover:shadow-sm transition-shadow cursor-pointer"
                     onClick={() => navigate(`/service-order/${order.id}`)}
                   >
-                    <CardContent className="py-4">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-foreground">{order.code}</h3>
-                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium", currentConfig.bgColor, currentConfig.color)}>
-                              {currentConfig.label}
-                            </span>
+                    <CardContent className="py-3 md:py-4 px-3 md:px-4">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-sm md:text-base">{order.code}</h3>
+                              <span className={cn("text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full font-medium", currentConfig.bgColor, currentConfig.color)}>
+                                {currentConfig.label}
+                              </span>
+                            </div>
+                            <p className="text-xs md:text-sm text-muted-foreground truncate">
+                              {order.budget?.client?.client_name || order.budget?.client?.company_name || 'Cliente não vinculado'}
+                            </p>
+                            <p className="text-xs md:text-sm text-muted-foreground">
+                              {order.budget?.code ? `Orçamento: ${order.budget.code}` : 'Sem orçamento vinculado'}
+                              {order.budget?.total ? ` - ${formatCurrency(order.budget.total)}` : ''}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {order.budget?.client?.client_name || order.budget?.client?.company_name || 'Cliente não vinculado'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {order.budget?.code ? `Orçamento: ${order.budget.code}` : 'Sem orçamento vinculado'}
-                            {order.budget?.total ? ` - ${formatCurrency(order.budget.total)}` : ''}
-                          </p>
-                          {order.final_amount && (
-                            <p className="text-sm font-medium mt-1">
-                              Total: {formatCurrency(order.final_amount)}
-                              {order.discount ? ` (-${formatCurrency(order.discount)})` : ''}
-                            </p>
-                          )}
-                          {order.paid_amount && order.paid_amount > 0 && (
-                            <p className="text-sm text-emerald-600 font-medium">
-                              Pago: {formatCurrency(order.paid_amount)}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground hidden lg:block">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {formatDate(order.created_at)}
                           </span>
+                        </div>
 
+                        {(order.final_amount || order.paid_amount) && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs md:text-sm">
+                            {order.final_amount && (
+                              <p className="font-medium">
+                                Total: {formatCurrency(order.final_amount)}
+                                {order.discount ? ` (-${formatCurrency(order.discount)})` : ''}
+                              </p>
+                            )}
+                            {order.paid_amount && order.paid_amount > 0 && (
+                              <p className="text-emerald-600 font-medium">
+                                Pago: {formatCurrency(order.paid_amount)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 flex-wrap">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                            className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 text-xs md:text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               const clientName = order.budget?.client?.client_name || order.budget?.client?.company_name || 'Cliente';
@@ -204,21 +206,21 @@ export function ServiceOrdersPage() {
                                 toast.error('Cliente sem telefone cadastrado');
                               }
                             }}
-                            title="Enviar atualização via WhatsApp"
                           >
-                            <MessageCircle className="w-4 h-4 mr-1" />
-                            WhatsApp
+                            <MessageCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                            <span className="hidden sm:inline">WhatsApp</span>
                           </Button>
                            
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="text-xs md:text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/service-order/${order.id}`);
                             }}
                           >
-                            <QrCode className="w-4 h-4 mr-1" />
+                            <QrCode className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                             Detalhes
                           </Button>
                         </div>

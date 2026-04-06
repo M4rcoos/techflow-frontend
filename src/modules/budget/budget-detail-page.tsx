@@ -9,16 +9,15 @@ import { toast } from 'sonner';
 import { BudgetEditForm } from './budget-edit-form';
 import { getUser } from '../../lib/api';
 import type { User as UserType } from '../../types';
-import { useRealTimeSync } from '../../hooks/use-real-time';
 import { useRoleAccess } from '../../hooks/use-role-access';
 import { ClientDetailModal } from '../client/client-detail-modal';
 
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-  DRAFT: { label: 'Rascunho', color: 'text-slate-700', bgColor: 'bg-slate-100' },
-  IN_ANALYSIS: { label: 'Em Análise', color: 'text-blue-700', bgColor: 'bg-blue-100' },
-  SENT: { label: 'Enviado', color: 'text-orange-700', bgColor: 'bg-orange-100' },
-  APPROVED: { label: 'Aprovado', color: 'text-green-700', bgColor: 'bg-green-100' },
-  REJECTED: { label: 'Rejeitado', color: 'text-red-700', bgColor: 'bg-red-100' },
+  DRAFT: { label: 'Rascunho', color: 'text-slate-700 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-800' },
+  IN_ANALYSIS: { label: 'Em Análise', color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-100 dark:bg-blue-900/40' },
+  SENT: { label: 'Enviado', color: 'text-orange-700 dark:text-orange-300', bgColor: 'bg-orange-100 dark:bg-orange-900/40' },
+  APPROVED: { label: 'Aprovado', color: 'text-green-700 dark:text-green-300', bgColor: 'bg-green-100 dark:bg-green-900/40' },
+  REJECTED: { label: 'Rejeitado', color: 'text-red-700 dark:text-red-300', bgColor: 'bg-red-100 dark:bg-red-900/40' },
 };
 
 export function BudgetDetailPage() {
@@ -31,9 +30,8 @@ export function BudgetDetailPage() {
   const [showClientModal, setShowClientModal] = useState(false);
 
   const { canEditClient } = useRoleAccess();
-  useRealTimeSync(true, 3000);
 
-  const currentConfig = budget ? statusConfig[budget.status.name] || { label: budget.status.name, color: 'text-gray-700', bgColor: 'bg-gray-100' } : null;
+  const currentConfig = budget ? statusConfig[budget.status.name] || { label: budget.status.name, color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-100 dark:bg-gray-800' } : null;
   const canEdit = budget?.status.name === 'IN_ANALYSIS';
   const canStartAnalysis = budget?.status.name === 'DRAFT';
   const canSend = budget?.status.name === 'IN_ANALYSIS';
@@ -42,8 +40,8 @@ export function BudgetDetailPage() {
   const urgencyBadge = (() => {
     if (!budget) return null;
     const urgency = calculateUrgency(budget.valid_until, budget.status.name);
-    if (urgency === 'EXPIRED') return { label: 'Expirado', color: 'text-red-700', bgColor: 'bg-red-100' };
-    if (urgency === 'DUE_TODAY') return { label: 'Vence hoje', color: 'text-amber-700', bgColor: 'bg-amber-100' };
+    if (urgency === 'EXPIRED') return { label: 'Expirado', color: 'text-red-700 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/40' };
+    if (urgency === 'DUE_TODAY') return { label: 'Vence hoje', color: 'text-amber-700 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/40' };
     return null;
   })();
 
@@ -393,69 +391,70 @@ export function BudgetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate('/budgets')} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate('/budgets')} className="mb-3 md:mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
+          <span className="hidden sm:inline">Voltar</span>
         </Button>
 
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col gap-4 mb-4 md:mb-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-semibold">{budget.code}</h1>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${currentConfig?.bgColor} ${currentConfig?.color}`}>
+            <div className="flex items-start flex-wrap gap-2 mb-2">
+              <h1 className="text-xl md:text-2xl font-semibold">{budget.code}</h1>
+              <span className={`text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full font-medium ${currentConfig?.bgColor} ${currentConfig?.color}`}>
                 {currentConfig?.label}
               </span>
               {urgencyBadge && (
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${urgencyBadge.bgColor} ${urgencyBadge.color}`}>
+                <span className={`text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full font-medium ${urgencyBadge.bgColor} ${urgencyBadge.color}`}>
                   {urgencyBadge.label}
                 </span>
               )}
               {isEditing && (
-                <span className="text-xs px-2 py-1 rounded-full font-medium bg-purple-100 text-purple-700">
+                <span className="text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
                   Modo Edição
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Cliente: {budget.client.client_name || budget.client.company_name}
             </p>
-            </div>
-            <div className="flex gap-2 flex-wrap">
+          </div>
+          <div className="flex flex-wrap gap-2">
               {!isEditing && canStartAnalysis && (
-                <Button onClick={handleStartAnalysis}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Iniciar Análise
+                <Button size="sm" onClick={handleStartAnalysis}>
+                  <Play className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Iniciar Análise</span>
                 </Button>
               )}
               {!isEditing && canEdit && (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Editar
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                  <Pencil className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Editar</span>
                 </Button>
               )}
               {!isEditing && canSend && (
-                <Button onClick={handleSend}>
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar
+                <Button size="sm" onClick={handleSend}>
+                  <Send className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Enviar</span>
                 </Button>
               )}
               {!isEditing && canApprove && (
                 <>
-                  <Button variant="outline" onClick={handleReject}>
-                    <X className="w-4 h-4 mr-2" />
-                    Rejeitar
+                  <Button size="sm" variant="outline" onClick={handleReject}>
+                    <X className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Rejeitar</span>
                   </Button>
-                  <Button className="bg-green-600 hover:bg-green-700" onClick={handleApprove}>
-                    <Check className="w-4 h-4 mr-2" />
-                    Aprovar
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500" onClick={handleApprove}>
+                    <Check className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Aprovar</span>
                   </Button>
                 </>
               )}
               <Button
+                size="sm"
                 variant="outline"
-                className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300"
                 onClick={() => {
                   const clientName = budget.client.client_name || budget.client.company_name || 'Cliente';
                   const currentUser = getUser<UserType>();
@@ -474,14 +473,13 @@ export function BudgetDetailPage() {
                     toast.error('Cliente sem telefone');
                   }
                 }}
-                title="Enviar orçamento via WhatsApp"
               >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
+                <MessageCircle className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">WhatsApp</span>
               </Button>
-              <Button variant="outline" onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir
+              <Button size="sm" variant="outline" onClick={handlePrint}>
+                <Printer className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Imprimir</span>
               </Button>
             </div>
         </div>
@@ -553,77 +551,77 @@ export function BudgetDetailPage() {
                 {budget.items.map((item, index) => (
                   <Card key={item.id || index} className="overflow-hidden border-l-4 border-l-[#1e40af]">
                     <CardContent className="p-0">
-                      <div className="bg-gradient-to-r from-slate-50 to-white p-4 border-b">
+                      <div className="bg-gradient-to-r from-muted to-card p-4 border-b dark:border-slate-700">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="bg-[#1e40af] text-white text-xs font-bold px-2 py-1 rounded">
+                              <span className="bg-[#1e40af] dark:bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
                                 #{index + 1}
                               </span>
                               <h3 className="font-semibold text-lg">{item.name}</h3>
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {item.mark && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
                                   {item.mark}
                                 </span>
                               )}
                               {item.model && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
                                   {item.model}
                                 </span>
                               )}
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
                                 Qtd: {item.quantity}
                               </span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-green-600">{formatCurrency(item.total)}</p>
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(item.total)}</p>
                           </div>
                         </div>
                       </div>
                       
                       <div className="p-4 space-y-3">
                         {item.reported_problem && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                             <div className="flex items-start gap-2">
-                              <span className="text-amber-600 mt-0.5">⚠️</span>
+                              <span className="text-amber-600 dark:text-amber-400 mt-0.5">⚠️</span>
                               <div>
-                                <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">Problema Relatado</p>
-                                <p className="text-sm text-amber-900 mt-1">{item.reported_problem}</p>
+                                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Problema Relatado</p>
+                                <p className="text-sm text-amber-900 dark:text-amber-200 mt-1">{item.reported_problem}</p>
                               </div>
                             </div>
                           </div>
                         )}
                         
                         {item.diagnosed_problem && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                             <div className="flex items-start gap-2">
-                              <span className="text-blue-600 mt-0.5">🔧</span>
+                              <span className="text-blue-600 dark:text-blue-400 mt-0.5">🔧</span>
                               <div>
-                                <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide">Problema Identificado</p>
-                                <p className="text-sm text-blue-900 mt-1">{item.diagnosed_problem}</p>
+                                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Problema Identificado</p>
+                                <p className="text-sm text-blue-900 dark:text-blue-200 mt-1">{item.diagnosed_problem}</p>
                               </div>
                             </div>
                           </div>
                         )}
                         
                         {item.services && item.services.length > 0 && (
-                          <div className="bg-slate-50 rounded-lg p-3">
-                            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3 flex items-center gap-1">
+                          <div className="bg-muted dark:bg-slate-800/50 rounded-lg p-3">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1">
                               <span>🔧</span> Serviços/Peças
                             </p>
                             <div className="space-y-2">
                               {item.services.map((svc, i) => (
-                                <div key={i} className="flex items-center justify-between py-2 border-b border-slate-200 last:border-0">
+                                <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
+                                    <span className="w-6 h-6 bg-secondary dark:bg-slate-700 rounded-full flex items-center justify-center text-xs font-medium text-muted-foreground">
                                       {svc.quantity}x
                                     </span>
-                                    <span className="text-sm font-medium text-slate-700">{svc.name}</span>
+                                    <span className="text-sm font-medium text-foreground">{svc.name}</span>
                                   </div>
-                                  <span className="text-sm font-semibold text-slate-700">{formatCurrency(svc.total)}</span>
+                                  <span className="text-sm font-semibold text-foreground">{formatCurrency(svc.total)}</span>
                                 </div>
                               ))}
                             </div>
@@ -646,11 +644,11 @@ export function BudgetDetailPage() {
             )}
 
             {(budget.total || 0) > 0 && (
-              <Card className="bg-slate-50">
+              <Card className="bg-muted dark:bg-slate-800/50">
                 <CardContent className="py-4">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-green-600">{formatCurrency(budget.total)}</span>
+                    <span className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(budget.total)}</span>
                   </div>
                 </CardContent>
               </Card>

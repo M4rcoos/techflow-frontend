@@ -196,7 +196,7 @@ export function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.title}
@@ -210,46 +210,51 @@ export function DashboardPage() {
             </div>
 
             {urgentCount > 0 && (
-              <Card className="mb-6 border-red-200 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors" onClick={() => navigate('/urgents')}>
-                <CardHeader className="py-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-medium flex items-center gap-2 text-red-700">
-                    <AlertCircle className="w-4 h-4" />
-                    Atenção: {urgentCount} item(s) urgentes
-                  </CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs text-red-600"
-                    onClick={(e) => { e.stopPropagation(); navigate('/urgents'); }}
-                  >
-                    Ver todos <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="py-2">
-                  <div className="space-y-2">
-                    {urgentItems.map((item: any, index: number) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 bg-white rounded cursor-pointer hover:bg-slate-50"
-                        onClick={() => navigate(item.type === 'budget' ? `/budget/${item.id}` : `/service-order/${item.id}`)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`p-1 rounded ${item.type === 'budget' ? 'bg-blue-100' : 'bg-purple-100'}`}>
-                            {item.type === 'budget' ? (
-                              <FileText className="w-4 h-4 text-blue-600" />
-                            ) : (
-                              <Wrench className="w-4 h-4 text-purple-600" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{item.code}</p>
-                            <p className="text-xs text-muted-foreground">{item.client}</p>
+              <Card 
+                className="mb-6 border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors" 
+                onClick={() => navigate('/urgents')}
+              >
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CardHeader className="py-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base font-medium flex items-center gap-2 text-red-700 dark:text-red-400">
+                      <AlertCircle className="w-4 h-4" />
+                      Atenção: {urgentCount} item(s) urgentes
+                    </CardTitle>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-xs text-red-600 dark:text-red-400"
+                      onClick={(e) => { e.stopPropagation(); navigate('/urgents'); }}
+                    >
+                      Ver todos <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <div className="space-y-2">
+                      {urgentItems.map((item: any, index: number) => (
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-white dark:bg-card rounded cursor-pointer hover:bg-slate-50 dark:hover:bg-muted"
+                          onClick={() => navigate(item.type === 'budget' ? `/budget/${item.id}` : `/service-order/${item.id}`)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1 rounded ${item.type === 'budget' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
+                              {item.type === 'budget' ? (
+                                <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              ) : (
+                                <Wrench className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{item.code}</p>
+                              <p className="text-xs text-muted-foreground">{item.client}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
+                      ))}
+                    </div>
+                  </CardContent>
+                </div>
               </Card>
             )}
 
@@ -324,7 +329,7 @@ export function DashboardPage() {
                   </CardContent>
                 </Card>
               )}
-                <Card className="border">
+              <Card className="border">
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
                   <CardTitle className="text-base font-medium flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#1e40af]" />

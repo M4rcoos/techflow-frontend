@@ -8,7 +8,6 @@ import { useBudgets } from '../../hooks';
 import { useRoleAccess } from '../../hooks/use-role-access';
 import { BudgetFormModal } from './budget-form-modal';
 import { PrintConfirmModal } from './print-confirm-modal';
-import { useRealTimeSync } from '../../hooks/use-real-time';
 
 const STATUS_LABELS: Record<string, string> = {
   ALL: 'Orçamentos',
@@ -31,9 +30,7 @@ export function BudgetsPage() {
   const expiring = searchParams.get('expiring') === 'true';
   const expired = searchParams.get('expired') === 'true';
 
-  useRealTimeSync(true, 5000);
-
-  const { budgets, pagination, isLoading, updateBudgetStatus, budgetStatuses } = useBudgets(page, 10, search, { expiring, expired });
+  const { budgets, pagination, isLoading, updateBudgetStatus, budgetStatuses } = useBudgets(page, 10, search, { expiring, expired, status: statusFilter, startDate, endDate });
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showPrintConfirm, setShowPrintConfirm] = useState(false);
   const [newlyCreatedBudgetId, setNewlyCreatedBudgetId] = useState<string | null>(null);
