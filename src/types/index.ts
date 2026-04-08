@@ -208,3 +208,74 @@ export interface CreateBudgetData {
 
 export type BudgetStatusName = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 export type ServiceOrderStatusName = 'OPEN' | 'IN_PROGRESS' | 'PAUSED' | 'DONE' | 'CANCELED';
+
+export interface Plan {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  maxOs: number;
+  maxBudgets: number;
+  maxEmployees: number;
+  active: boolean;
+}
+
+export type SubscriptionStatus = 'ACTIVE' | 'INACTIVE' | 'CANCELED' | 'PENDING';
+
+export interface Subscription {
+  id: string;
+  status: SubscriptionStatus;
+  plan: Plan;
+  current_period_end?: string;
+}
+
+export interface Usage {
+  os_count: number;
+  budget_count: number;
+  employees_count: number;
+  reset_at: string;
+}
+
+export interface BillingInfo {
+  subscription: Subscription | null;
+  usage: Usage;
+}
+
+export interface AbacatePayBilling {
+  id: string;
+  status: 'PENDING' | 'PAID' | 'CANCELED' | 'OVERDUE';
+  amount: number;
+  plan?: {
+    id: string;
+    name: string;
+    interval: string;
+  };
+  customer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  payment_method?: string;
+  created_at: string;
+  paid_at?: string;
+  expires_at?: string;
+}
+
+export interface AbacatePaySubscription {
+  id: string;
+  status: 'ACTIVE' | 'CANCELED' | 'PENDING' | 'EXPIRED';
+  plan: {
+    id: string;
+    name: string;
+    interval: string;
+    amount: number;
+  };
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  current_period_end: string;
+  created_at: string;
+  canceled_at?: string;
+}

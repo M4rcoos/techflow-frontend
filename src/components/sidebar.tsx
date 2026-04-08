@@ -11,7 +11,8 @@ import {
   Sun,
   Moon,
   UserCircle,
-  AlertCircle
+  AlertCircle,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../hooks/use-auth';
 import { useRoleAccess } from '../hooks/use-role-access';
@@ -42,6 +43,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     { label: 'Clientes', icon: Users, href: '/clients', show: true },
     { label: 'Orçamentos', icon: FileText, href: '/budgets', show: true },
     { label: 'Ordens de Serviço', icon: Wrench, href: '/service-orders', show: true },
+    { label: 'Plano', icon: Crown, href: '/settings/billing', show: true },
     { label: 'Configurações', icon: Settings, href: '/settings', show: canManageUsers },
     { label: 'Usuários', icon: UserCircle, href: '/users', show: canManageUsers },
   ];

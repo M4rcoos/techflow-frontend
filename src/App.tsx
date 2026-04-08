@@ -19,6 +19,7 @@ import { ServiceOrderDetailPage } from './modules/serviceOrder/service-order-det
 import { TrackPage } from './modules/public/track-page';
 import { UsersPage } from './modules/user/users-page';
 import { SettingsPage } from './modules/settings/settings-page';
+import { BillingPage } from './modules/billing';
 import { Sidebar } from './components/sidebar';
 import { MobileHeader } from './components/mobile-header';
 
@@ -119,6 +120,11 @@ function AppRoutes() {
       <Route path="/settings" element={
         <ProtectedRoute>
           <AppLayout><SettingsPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/settings/billing" element={
+        <ProtectedRoute>
+          <AppLayout><BillingPage /></AppLayout>
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

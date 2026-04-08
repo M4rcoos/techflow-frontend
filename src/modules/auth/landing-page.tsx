@@ -16,8 +16,63 @@ import {
   Star,
   ArrowUpRight,
   Check,
+  Crown,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+
+const plans = [
+  {
+    name: 'Básico',
+    price: '39,90',
+    period: '/mês',
+    description: 'Ideal para começar',
+    features: [
+      '50 Ordens de Serviço/mês',
+      '50 Orçamentos/mês',
+      'Até 2 funcionários',
+      'Gestão de clientes',
+      'Aprovação online por link',
+      'Impressão de OS e garantia',
+      'Dashboard básico',
+    ],
+    highlight: false,
+    cta: 'Começar Grátis',
+  },
+  {
+    name: 'Profissional',
+    price: '99,90',
+    period: '/mês',
+    description: 'Para quem quer crescer',
+    features: [
+      '200 Ordens de Serviço/mês',
+      '200 Orçamentos/mês',
+      'Até 10 funcionários',
+      'Tudo do Básico',
+      'Dashboard avançado',
+      'Relatórios financeiros',
+      'Suporte prioritário',
+    ],
+    highlight: true,
+    cta: 'Começar Grátis',
+  },
+  {
+    name: 'Enterprise',
+    price: '299,90',
+    period: '/mês',
+    description: 'Para grandes empresas',
+    features: [
+      'Ordens ilimitadas',
+      'Orçamentos ilimitados',
+      'Funcionários ilimitados',
+      'Tudo do Profissional',
+      'Dashboard enterprise',
+      'BI completo e personalizado',
+      'Suporte 24/7',
+    ],
+    highlight: false,
+    cta: 'Falar com Vendas',
+  },
+];
 
 const benefits = [
   {
@@ -127,7 +182,7 @@ export function LandingPage() {
             </Link>
             <Link to="/register">
               <Button size="sm" className="bg-primary hover:bg-primary/90">
-                Grátis
+                15 Dias Grátis
               </Button>
             </Link>
           </div>
@@ -138,9 +193,9 @@ export function LandingPage() {
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <CheckCircle className="w-4 h-4" />
-              Para Assistências Técnicas
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium mb-6">
+              <Crown className="w-4 h-4" />
+              15 dias grátis • Sem cartão de crédito
             </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
               <span className="text-foreground">Seu cliente aprova,</span>
@@ -157,16 +212,19 @@ export function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
                 <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 px-8 py-6 text-lg font-semibold">
-                  Começar Grátis
+                  15 Dias Grátis
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
               <Link to="/login">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 py-6 text-lg font-semibold">
-                  Demonstração
+                  Já tenho conta
                 </Button>
               </Link>
             </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              Planos a partir de <strong>R$ 39,90/mês</strong> • Cancele quando quiser
+            </p>
           </div>
 
           {/* Stats */}
@@ -399,9 +457,11 @@ export function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Sua assistência merece crescer
             </h2>
-            <p className="text-lg text-primary-foreground/90 mb-8 max-w-xl mx-auto">
-              Comece hoje, grátis. Sem cartão de crédito, sem instalações. 
-              Em 5 minutos você já está gerenciando orçamentos.
+            <p className="text-lg text-primary-foreground/90 mb-4 max-w-xl mx-auto">
+              Comece hoje com <strong>15 dias grátis</strong>. Sem cartão de crédito.
+            </p>
+            <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
+              Depois, planos a partir de R$ 39,90/mês. Cancele quando quiser.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
@@ -409,7 +469,7 @@ export function LandingPage() {
                   size="lg" 
                   className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg font-semibold"
                 >
-                  Criar Conta Grátis
+                  15 Dias Grátis
                   <ArrowUpRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -417,11 +477,11 @@ export function LandingPage() {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-primary-foreground/80">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
-                <span>Gratuito para sempre</span>
+                <span>Sem cartão de crédito</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
-                <span>Sem compromisso</span>
+                <span>Cancele quando quiser</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
@@ -429,6 +489,103 @@ export function LandingPage() {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              <Crown className="w-4 h-4" />
+              Planos
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              Escolha seu plano
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Comece grátis e escale conforme seu negócio cresce. Sem surpresas, sem taxas escondidas.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {plans.map((plan, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className={`rounded-2xl p-8 ${
+                  plan.highlight 
+                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' 
+                    : 'bg-card border'
+                }`}
+              >
+                {plan.highlight && (
+                  <div className="bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full inline-block mb-4">
+                    Mais Popular
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className={`text-xl font-bold mb-2 ${plan.highlight ? 'text-white' : ''}`}>
+                    {plan.name}
+                  </h3>
+                  <p className={`text-sm ${plan.highlight ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                    {plan.description}
+                  </p>
+                </div>
+                
+                <div className="mb-6">
+                  <span className={`text-4xl font-bold ${plan.highlight ? 'text-white' : ''}`}>
+                    R$ {plan.price}
+                  </span>
+                  <span className={`${plan.highlight ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                    {plan.period}
+                  </span>
+                </div>
+
+                <ul className={`space-y-3 mb-8 ${plan.highlight ? 'text-white/90' : ''}`}>
+                  {plan.features.map((feature, fIndex) => (
+                    <li key={fIndex} className="flex items-start gap-2 text-sm">
+                      <Check className={`w-5 h-5 ${plan.highlight ? 'text-white' : 'text-primary'} flex-shrink-0 mt-0.5`} />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link to="/register" className="block">
+                  <Button 
+                    className={`w-full ${
+                      plan.highlight 
+                        ? 'bg-white text-primary hover:bg-white/90' 
+                        : ''
+                    }`}
+                    variant={plan.highlight ? 'default' : 'outline'}
+                    size="lg"
+                  >
+                    {plan.cta}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-muted-foreground">
+              Todos os planos incluem: gestão de clientes, orçamentos e ordens de serviço.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Comece com 15 dias grátis, sem compromisso.
+            </p>
+            <Link to="/register" className="inline-block mt-4">
+              <Button variant="outline" size="lg">
+                <Crown className="w-4 h-4 mr-2" />
+                Experimentar Grátis
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
