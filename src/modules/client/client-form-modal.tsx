@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -49,12 +49,20 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [cpfError, setCpfError] = useState('');
   const [cnpjError, setCnpjError] = useState('');
+  const [hasCpfValidationError, setHasCpfValidationError] = useState(false);
+  const [hasCnpjValidationError, setHasCnpjValidationError] = useState(false);
   const { createClient, isCreating } = useClients();
+
+  const cpfInputRef = useRef<HTMLInputElement>(null);
+  const cnpjInputRef = useRef<HTMLInputElement>(null);
+  const clientNameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setCpfError('');
       setCnpjError('');
+      setHasCpfValidationError(false);
+      setHasCnpjValidationError(false);
       setLoadingTypes(true);
       clientService.getClientTypes()
         .then(setClientTypes)
@@ -132,12 +140,14 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
     const formatted = formatCPF(e.target.value);
     setValue('cpf', formatted);
     if (cpfError) setCpfError('');
+    if (hasCpfValidationError) setHasCpfValidationError(false);
   };
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCNPJ(e.target.value);
     setValue('cnpj', formatted);
     if (cnpjError) setCnpjError('');
+    if (hasCnpjValidationError) setHasCnpjValidationError(false);
   };
 
   const onSubmit = (data: FormData) => {
@@ -149,10 +159,14 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
     if (isPessoaFisica && cpfDigits.length > 0) {
       if (cpfDigits.length < 11) {
         setCpfError('CPF deve ter 11 dígitos');
+        setHasCpfValidationError(true);
+        cpfInputRef.current?.focus();
         return;
       }
       if (!validateCPF(cpfValue)) {
         setCpfError('CPF inválido');
+        setHasCpfValidationError(true);
+        cpfInputRef.current?.focus();
         return;
       }
     }
@@ -160,10 +174,14 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
     if (isPessoaJuridica && cnpjDigits.length > 0) {
       if (cnpjDigits.length < 14) {
         setCnpjError('CNPJ deve ter 14 dígitos');
+        setHasCnpjValidationError(true);
+        cnpjInputRef.current?.focus();
         return;
       }
       if (!validateCNPJ(cnpjValue)) {
         setCnpjError('CNPJ inválido');
+        setHasCnpjValidationError(true);
+        cnpjInputRef.current?.focus();
         return;
       }
     }
@@ -171,9 +189,20 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
     if (cpfDigits.length === 0 && cnpjDigits.length === 0 && !prefillDoc) {
       if (isPessoaFisica) {
         setCpfError('CPF é obrigatório');
+        setHasCpfValidationError(true);
+        cpfInputRef.current?.focus();
       } else if (isPessoaJuridica) {
         setCnpjError('CNPJ é obrigatório');
+        setHasCnpjValidationError(true);
+        cnpjInputRef.current?.focus();
+      } else {
+        clientNameInputRef.current?.focus();
       }
+      return;
+    }
+
+    if (!data.client_name && !data.company_name) {
+      clientNameInputRef.current?.focus();
       return;
     }
 
@@ -206,6 +235,8 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
         reset();
         setCpfError('');
         setCnpjError('');
+        setHasCpfValidationError(false);
+        setHasCnpjValidationError(false);
         onOpenChange(false);
         if (onSuccess) {
           onSuccess(newClient);
@@ -218,6 +249,8 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
     reset();
     setCpfError('');
     setCnpjError('');
+    setHasCpfValidationError(false);
+    setHasCnpjValidationError(false);
     onOpenChange(false);
   };
 
@@ -262,6 +295,10 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                 id="client_name" 
                 placeholder={isPessoaJuridica ? "João Silva" : "João Silva"} 
                 {...register('client_name')} 
+                ref={(e) => {
+                  register('client_name').ref(e);
+                  clientNameInputRef.current = e;
+                }}
               />
             </div>
             <div>
@@ -292,7 +329,8 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
               {isPessoaFisica && (
                 <div>
                   <Label htmlFor="cpf">
-                    CPF {prefillDoc && isDocCpf && <span className="text-green-600">(prévio)</span>}
+                    CPF {prefillDoc && isDocCpf && !hasCpfValidationError && <span className="text-green-600">(prévio)</span>}
+                    {hasCpfValidationError && <span className="text-orange-600">(corrija o CPF)</span>}
                   </Label>
                   <Input 
                     id="cpf" 
@@ -301,7 +339,11 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     {...register('cpf')}
                     onChange={handleCpfChange}
                     defaultValue={prefillDoc && isDocCpf ? prefillDoc : undefined}
-                    disabled={!!(prefillDoc && isDocCpf)}
+                    disabled={!!(prefillDoc && isDocCpf) && !hasCpfValidationError}
+                    ref={(e) => {
+                      register('cpf').ref(e);
+                      cpfInputRef.current = e;
+                    }}
                   />
                   {cpfError && <p className="text-xs text-red-500 mt-1">{cpfError}</p>}
                 </div>
@@ -309,7 +351,8 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
               {isPessoaJuridica && (
                 <div>
                   <Label htmlFor="cnpj">
-                    CNPJ {prefillDoc && !isDocCpf && <span className="text-green-600">(prévio)</span>}
+                    CNPJ {prefillDoc && !isDocCpf && !hasCnpjValidationError && <span className="text-green-600">(prévio)</span>}
+                    {hasCnpjValidationError && <span className="text-orange-600">(corrija o CNPJ)</span>}
                   </Label>
                   <Input 
                     id="cnpj" 
@@ -318,7 +361,11 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     {...register('cnpj')}
                     onChange={handleCnpjChange}
                     defaultValue={prefillDoc && !isDocCpf ? prefillDoc : undefined}
-                    disabled={!!(prefillDoc && !isDocCpf)}
+                    disabled={!!(prefillDoc && !isDocCpf) && !hasCnpjValidationError}
+                    ref={(e) => {
+                      register('cnpj').ref(e);
+                      cnpjInputRef.current = e;
+                    }}
                   />
                   {cnpjError && <p className="text-xs text-red-500 mt-1">{cnpjError}</p>}
                 </div>
@@ -335,6 +382,10 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     maxLength={14}
                     {...register('cpf')}
                     onChange={handleCpfChange}
+                    ref={(e) => {
+                      register('cpf').ref(e);
+                      cpfInputRef.current = e;
+                    }}
                   />
                   {cpfError && <p className="text-xs text-red-500 mt-1">{cpfError}</p>}
                 </div>
@@ -348,6 +399,10 @@ export function ClientFormModal({ open, onOpenChange, onSuccess, prefillDoc, onD
                     maxLength={18}
                     {...register('cnpj')}
                     onChange={handleCnpjChange}
+                    ref={(e) => {
+                      register('cnpj').ref(e);
+                      cnpjInputRef.current = e;
+                    }}
                   />
                   {cnpjError && <p className="text-xs text-red-500 mt-1">{cnpjError}</p>}
                 </div>
